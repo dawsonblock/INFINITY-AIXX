@@ -331,6 +331,7 @@ class InfinityV3DualHybridAgent(nn.Module):
         obs: torch.Tensor,
         advantage: Optional[torch.Tensor] = None,
         store_for_ltm: bool = False,
+        episode_env_ids: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Forward pass through the agent.
@@ -579,6 +580,7 @@ class InfinityV3DualHybridAgent(nn.Module):
         deterministic: bool = False,
         store_for_ltm: bool = False,
         return_fused: bool = False,
+        episode_env_ids: Optional[torch.Tensor] = None,
     ):
         """
         Get action from policy.
@@ -590,7 +592,11 @@ class InfinityV3DualHybridAgent(nn.Module):
         Returns:
             (action, log_prob, value) or (action, log_prob, value, w)
         """
-        out = self.forward(obs, store_for_ltm=store_for_ltm)
+        out = self.forward(
+            obs,
+            store_for_ltm=store_for_ltm,
+            episode_env_ids=episode_env_ids,
+        )
         logits = out["logits"]
         value = out["value"]
 

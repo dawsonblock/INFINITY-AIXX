@@ -6,6 +6,9 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import platform as _platform
+import subprocess as _subprocess
+import sys as _sys
 
 import numpy as np
 import torch
@@ -24,6 +27,14 @@ def _resolve_device(device: str) -> str:
             return "mps"
         return "cpu"
     return device
+
+
+def _git_rev() -> Optional[str]:
+    try:
+        out = _subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=_subprocess.DEVNULL)
+        return out.decode("utf-8").strip()
+    except Exception:
+        return None
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -58,36 +69,24 @@ def main(argv: Optional[list[str]] = None) -> int:
         "eval/return_std": return_std,
         "eval/length_mean": length_mean,
     }
-    
-import sys as _sys
-import platform as _platform
-import subprocess as _subprocess
 
-def _git_rev() -> Optional[str]:
-    try:
-        out = _subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=_subprocess.DEVNULL)
-        return out.decode("utf-8").strip()
-    except Exception:
-        return None
+    payload = {
+        "env_id": args.env_id,
+        "checkpoint": args.checkpoint,
+        "episodes": args.episodes,
+        "seed": args.seed,
+        "device": device,
+        "timestamp_utc": datetime.utcnow().isoformat() + "Z",
+        "argv": list(argv or []),
+        "python": _sys.version.replace("\n", " "),
+        "platform": _platform.platform(),
+        "torch": getattr(torch, "__version__", None),
+        "numpy": getattr(np, "__version__", None),
+        "git_rev": _git_rev(),
+        "metrics": metrics,
+    }
 
-payload = {
-    "env_id": args.env_id,
-    "checkpoint": args.checkpoint,
-    "episodes": args.episodes,
-    "seed": args.seed,
-    "device": device,
-    "timestamp_utc": datetime.utcnow().isoformat() + "Z",
-    "argv": list(argv or []),
-    "python": _sys.version.replace("\n", " "),
-    "platform": _platform.platform(),
-    "torch": getattr(torch, "__version__", None),
-    "numpy": getattr(np, "__version__", None),
-    "git_rev": _git_rev(),
-    "metrics": metrics,
-}
-
-if args.out:
-
+    if args.out:
         Path(args.out).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     else:
         print(json.dumps(payload, indent=2))

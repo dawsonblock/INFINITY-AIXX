@@ -7,6 +7,9 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
+import platform as _platform
+import subprocess as _subprocess
+import sys as _sys
 
 import numpy as np
 import torch
@@ -111,6 +114,14 @@ def _resolve_device(device: str) -> str:
     return device
 
 
+def _git_rev() -> Optional[str]:
+    try:
+        out = _subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=_subprocess.DEVNULL)
+        return out.decode("utf-8").strip()
+    except Exception:
+        return None
+
+
 def _success_threshold(env_id: str) -> Optional[float]:
     """Return task success threshold for time-to-threshold metric, or None."""
     if not env_id:
@@ -197,34 +208,25 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     # Persist config + metadata
     (run_dir / "config.json").write_text(json.dumps(asdict(cfg), indent=2), encoding="utf-8")
-    
-import sys as _sys
-import platform as _platform
-import subprocess as _subprocess
-
-def _git_rev() -> Optional[str]:
-    try:
-        out = _subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=_subprocess.DEVNULL)
-        return out.decode("utf-8").strip()
-    except Exception:
-        return None
-
-meta = {
-    "run_id": run_id,
-    "env_id": cfg.env_id,
-    "seed": cfg.seed,
-    "device": device,
-    "timestamp_utc": datetime.utcnow().isoformat() + "Z",
-    "argv": list(argv or []),
-    "python": _sys.version.replace("\n", " "),
-    "platform": _platform.platform(),
-    "torch": getattr(torch, "__version__", None),
-    "numpy": getattr(np, "__version__", None),
-    "git_rev": _git_rev(),
-    "config_path": str(Path(args.config).resolve()) if args.config else None,
-    "set_overrides": list(args.sets or []),
-}
-(run_dir / "run_meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
+    meta = {
+        "run_id": run_id,
+        "env_id": cfg.env_id,
+        "seed": cfg.seed,
+        "device": device,
+        "timestamp_utc": datetime.utcnow().isoformat() + "Z",
+        "argv": list(argv or []),
+        "python": _sys.version.replace("\n", " "),
+        "platform": _platform.platform(),
+        "torch": getattr(torch, "__version__", None),
+        "numpy": getattr(np, "__version__", None),
+        "git_rev": _git_rev(),
+        "config_path": str(Path(args.config).resolve()) if args.config else None,
+        "set_overrides": list(args.sets or []),
+    }
+    (run_dir / "run_meta.json").write_text(
+        json.dumps(meta, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
 
     # Build
     # Optional multitask configuration (Phase-3)

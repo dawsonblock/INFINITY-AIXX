@@ -45,9 +45,8 @@ faiss = [
     "faiss-cpu>=1.7.4",
 ]
 mamba = [
-    "mamba-ssm>=1.0.0",
+    "mamba-ssm>=1.0.0; sys_platform == 'linux'",
 ]
-
 env = [
     "gymnasium[classic-control]>=0.29.0",
     "transformers>=4.40.0",
@@ -60,7 +59,6 @@ transformers = [
 ]
 all = [
     "faiss-cpu>=1.7.4",
-    "mamba-ssm>=1.0.0",
     "tensorboard>=2.10.0",
     "gymnasium[classic-control]>=0.29.0",
 ]

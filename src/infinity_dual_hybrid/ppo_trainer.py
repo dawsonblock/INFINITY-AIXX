@@ -181,6 +181,10 @@ class PPOTrainer:
         else:
             self.amp_dtype = torch.float16
 
+        # torch.amp.autocast requires a valid device_type even when enabled=False.
+        # We only enable GradScaler (and thus autocast) on CUDA.
+        self.amp_device_type = "cuda" if str(self.device).startswith("cuda") else "cpu"
+
         self.scaler = GradScaler(enabled=(self.amp_enabled and str(self.device).startswith("cuda")))
 
 # World model optimizer (if enabled)
@@ -901,6 +905,25 @@ def train_step(self, rollouts: RolloutBatch) -> Dict[str, float]:
         self._store_old_policy()
 
     self.iteration += 1
+
+    # Adapter diagnostics (safe defaults if adapters are disabled)
+    adapter_usage_entropy = 0.0
+    adapter_selection_entropy_mean = 0.0
+    try:
+        choice = getattr(rollouts, "adapter_choice", None)
+        ent = getattr(rollouts, "adapter_entropy", None)
+        if choice is not None and ent is not None:
+            choice_t = torch.as_tensor(choice)
+            ent_t = torch.as_tensor(ent)
+            mask = choice_t >= 0
+            if bool(mask.any()):
+                choice_cpu = choice_t[mask].detach().to("cpu").numpy().astype(np.int64)
+                counts = np.bincount(choice_cpu)
+                probs = counts / max(int(counts.sum()), 1)
+                adapter_usage_entropy = float(-(probs * np.log(probs + 1e-12)).sum())
+                adapter_selection_entropy_mean = float(ent_t[mask].mean().item())
+    except Exception:
+        pass
 
     metrics = {
 
