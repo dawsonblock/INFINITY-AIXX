@@ -1,0 +1,27 @@
+INFINITY AI – WHAT TO TUNE FIRST (CHEAT SHEET)
+
+Training unstable
+- Lower PPO learning rate
+- Reduce PPO epochs / minibatch ratio
+- Add/verify LayerNorm on fused workspace
+- Reduce world model hidden size or lr
+
+Overthinking / hesitation
+- Lower counterfactual uncertainty penalty
+- Shorten counterfactual horizon
+- Raise the confidence threshold to enter deliberation
+
+Random / noisy actions
+- Increase rollout length (more on-policy signal)
+- Lower entropy coef
+- Ensure action logits are not saturated (check init/std)
+
+Imagination drift
+- Increase w_next loss weight
+- Reduce horizon until predictions are accurate
+- Verify terminal masking (done) on w_next targets
+
+World model not helping
+- Ensure it trains every PPO update
+- Delay use of deliberation until WM loss falls
+- Inspect u_hat calibration (too high = timid, too low = reckless)

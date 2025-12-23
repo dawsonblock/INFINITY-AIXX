@@ -1,0 +1,24 @@
+INFINITY AI – Dual Hybrid Cognitive Core (Operator Manual)
+
+Quick start:
+  python -m venv venv
+  source venv/bin/activate
+  pip install -e .
+  python scripts/train_cartpole_baseline.py
+
+Core loop:
+  obs -> encoder/memory/SSM -> fused workspace w
+  policy/value act on w
+  world model predicts (w_next, r_hat, done_logit, u_hat) from (w,a)
+  HumanLikeRouter optionally runs counterfactual lookahead in w-space.
+
+Key files:
+  src/infinity_dual_hybrid/agent.py         agent + router + world model hook
+  src/infinity_dual_hybrid/world_model.py   latent dynamics
+  src/infinity_dual_hybrid/ppo_trainer.py   PPO + world model training
+  src/humanlike_core/decision_router.py     self-model + emotion + deliberation
+  src/humanlike_core/counterfactual_simulator.py  lookahead scorer
+
+Reset contract:
+  If HumanLikeConfig.z_reset_on_env_reset=True and z_persist_across_episodes=False,
+  call router.reset_on_env_reset(states, done_mask) each env step before step().

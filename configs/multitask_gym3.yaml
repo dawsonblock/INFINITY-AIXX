@@ -1,0 +1,20 @@
+# Phase-3 multitask config (classic control trio)
+env_id: CartPole-v1  # unused when multitask.enabled=true; kept for compatibility
+seed: 0
+
+ppo:
+  total_timesteps: 300000
+  n_envs: 8
+  rollout_steps: 128
+  eval_interval: 10
+  eval_episodes: 5
+  # existing knobs remain
+
+multitask:
+  enabled: true
+  tasks: ["cartpole_v1", "acrobot_v1", "mountaincar_v0"]
+  router: "round_robin"      # round_robin | competence | spaced_repetition
+  segment_steps: 10000
+  eval_every_segments: 1
+  eval_episodes: 5
+  seeds_eval: [0,1,2,3,4]

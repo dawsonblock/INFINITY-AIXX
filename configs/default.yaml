@@ -1,0 +1,24 @@
+env_id: CartPole-v1
+device: auto
+seed: 0
+
+agent:
+  obs_dim: 4
+  act_dim: 2
+  hidden_dim: 256
+  use_ltm_in_forward: true
+  use_miras_in_forward: true
+  world_model:
+    enabled: true
+    hidden: 512
+  backbone:
+    d_model: 256
+    use_mamba: true
+    require_mamba2: true
+    num_mamba_layers: 4
+    use_attention: false
+
+ppo:
+  steps_per_rollout: 2048
+  max_iterations: 200
+  lr: 3.0e-4

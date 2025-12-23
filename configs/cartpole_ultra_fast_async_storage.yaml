@@ -1,0 +1,31 @@
+# High-throughput profile (Gymnasium VectorEnv + async transfers)
+env_id: CartPole-v1
+seed: 123
+
+agent:
+  backbone: gru
+  hidden_dim: 256
+  miras:
+    enabled: true
+  ltm:
+    enabled: true
+    store_on_episode_end: true
+  humanlike_enabled: true
+
+ppo:
+  total_timesteps: 200000
+  n_envs: 16
+  rollout_steps: 512
+  train_epochs: 8
+  batch_size: 2048
+  learning_rate: 0.0003
+
+  vector_env: true
+  vector_async: false
+  pin_memory: true
+  async_transfer: true
+
+  torch_compile: false
+
+# Keep rollouts on GPU to avoid CPU copies
+rollouts_on_cpu: false

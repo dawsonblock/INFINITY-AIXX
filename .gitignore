@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runs / artifacts
+runs/
+checkpoints/
+*.pt
+*.ckpt
+*.pth
+*.log
+*.jsonl
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db

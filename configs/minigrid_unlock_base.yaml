@@ -1,0 +1,38 @@
+env_id: MiniGrid-BlockedUnlockPickup-v0
+num_envs: 8
+device: auto
+
+ppo:
+  rollout_steps: 512
+  total_updates: 120
+  epochs: 4
+  minibatches: 4
+  gamma: 0.99
+  gae_lambda: 0.95
+  lr: 0.00025
+  clip_range: 0.2
+  vf_coef: 0.5
+  ent_coef: 0.01
+  max_grad_norm: 1.0
+
+agent:
+  d_model: 256
+  use_mamba: true
+  require_mamba2: false
+  use_attention: false
+  num_mamba_layers: 4
+
+  use_miras: true
+  use_ltm: true
+
+  use_world_model: true
+  humanlike_enabled: true
+
+pseudo:
+  enabled: true
+  entropy_trigger: 1.2
+  num_candidates: 8
+  horizon: 6
+  gamma: 0.97
+  lambda_u: 0.3
+  lambda_done: 1.0
