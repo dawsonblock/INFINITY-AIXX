@@ -6,6 +6,7 @@ All hyperparameters in one place for easy tuning and experiment tracking.
 """
 
 from dataclasses import dataclass, field
+import sys as _sys
 from typing import Optional
 
 
@@ -50,7 +51,7 @@ class LTMConfig:
     max_size: int = 100_000
 
     # FAISS settings
-    use_faiss: bool = True
+    use_faiss: bool = field(default_factory=lambda: _sys.platform == "linux")
     nlist: int = 1024          # Number of IVF clusters
     m: int = 16                # PQ subquantizers
     nprobe: int = 8            # Clusters to search

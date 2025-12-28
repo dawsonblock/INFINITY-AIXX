@@ -491,6 +491,10 @@ class InfinityV3DualHybridAgent(nn.Module):
                 states = torch.cat(self._episode_states, dim=0)  # [T, d_model]
                 self._episode_states = []
 
+        target_device = self.ltm_key_proj.weight.device
+        if states.device != target_device:
+            states = states.to(target_device)
+
         # Compute importance scores with RMD gate
         if self.rmd_gate is not None and not force:
             with torch.no_grad():

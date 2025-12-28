@@ -434,7 +434,14 @@ class LTMWrapper(nn.Module):
         top_k: Optional[int] = None,
     ) -> torch.Tensor:
         """Retrieve memories."""
-        return self._ltm.retrieve(queries, top_k)
+        query_device = queries.device
+        q = queries
+        if q.device.type != "cpu":
+            q = q.detach().to("cpu")
+        out = self._ltm.retrieve(q, top_k)
+        if out.device != query_device:
+            out = out.to(query_device)
+        return out
 
     def clear(self) -> None:
         """Clear all memories."""

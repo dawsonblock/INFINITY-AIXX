@@ -16,7 +16,7 @@ import torch
 from .utils import set_global_seed
 
 from .config import TrainConfig, get_config_for_env
-from .envs import make_envs
+from .envs import make_envs, make_vector_env
 from .agent import build_agent
 from .metrics.plots import save_reliability_diagram, save_metric_timeseries
 
@@ -345,6 +345,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         else:
             envs = make_envs(cfg.env_id, num_envs=n_envs, cfg=cfg)
 
+        eval_envs = None
+        try:
+            eval_envs = make_envs(cfg.env_id, num_envs=1, cfg=cfg)
+        except Exception:
+            eval_envs = None
+
         iters = max(1, int(int(total_timesteps) // int(steps_per_iter)))
 
         for it in range(iters):
@@ -406,7 +412,8 @@ def main(argv: Optional[list[str]] = None) -> int:
                 ece_w_series.append(float(metrics.get("wm/calib_ece_w", 0.0)))
 
             if (it + 1) % max(1, int(cfg.ppo.eval_interval)) == 0:
-                eval_stats = trainer.evaluate(envs, num_episodes=cfg.ppo.eval_episodes, deterministic=True)
+                eval_target = eval_envs if eval_envs is not None else envs
+                eval_stats = trainer.evaluate(eval_target, num_episodes=cfg.ppo.eval_episodes, deterministic=True)
 
                 return_mean = float(eval_stats.get("eval_mean_reward", eval_stats.get("return_mean", -1e18)))
                 return_std = float(eval_stats.get("eval_std_reward", eval_stats.get("return_std", 0.0)))
@@ -446,11 +453,24 @@ def main(argv: Optional[list[str]] = None) -> int:
         except Exception:
             pass
 
-        for env in envs:
-            try:
-                env.close()
-            except Exception:
-                pass
+        if eval_envs is not None:
+            for env in eval_envs:
+                try:
+                    env.close()
+                except Exception:
+                    pass
+
+        try:
+            if isinstance(envs, list):
+                for env in envs:
+                    try:
+                        env.close()
+                    except Exception:
+                        pass
+            else:
+                envs.close()
+        except Exception:
+            pass
 
     else:
         # ---- multitask (Phase-3) ----
